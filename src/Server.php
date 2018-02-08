@@ -23,14 +23,9 @@ class Server extends Swoole\Protocol\CometServer
     {
         //将配置写入config.js
         $config_js = <<<HTML
-var avataroffline='{$config['img']['avataroffline']}';
-var avatarleadermessage='{$config['img']['avatarleadermessage']}';
-var avatarleaderonline='{$config['img']['avatarleaderonline']}';
-var avatarworkermessage='{$config['img']['avatarworkermessage']}';
-var avatarworkeronline='{$config['img']['avatarworkeronline']}';
 var webim = {
     'server' : '{$config['server']['url']}'
-    }
+}
 HTML;
         file_put_contents(WEBPATH . '/config.js', $config_js);
 
@@ -53,6 +48,7 @@ HTML;
         /**
          * 使用文件或redis存储聊天信息
          */
+
         $this->storage = new Storage($config['storage']);
         $this->origin = $config['server']['origin'];
         parent::__construct($config);
@@ -72,7 +68,6 @@ HTML;
                 'from' => 0,
                 'channal' => 0,
                 'data' => $userInfo['name'] . "下线了",
-                'userid'=>$userInfo['userid'],
             );
             $this->storage->logout($client_id);
             unset($this->users[$client_id]);
@@ -90,7 +85,7 @@ HTML;
             switch($req['cmd'])
             {
                 case 'getHistory':
-                    $history = array('cmd'=> 'getHistory', 'history' => $this->storage->getMyHistory($req['userid']));
+                    $history = array('cmd'=> 'getHistory', 'history' => $this->storage->getHistory());
                     if ($this->isCometClient($req['fd']))
                     {
                         return $req['fd'].json_encode($history);
@@ -118,16 +113,7 @@ HTML;
     {
         $this->send(substr($data, 0, 32), substr($data, 32));
     }
-//    function cmd_getUnreadUser($client_id,$msg){
-//        $resMsg = array(
-//            'cmd' => 'getUnreadUser',
-//        );
-//        $users = $this->storage->getOnlineUsers();
-//        $info = $this->storage->getUsers($users,$msg);
-//        $resMsg['users'] = $users;
-//        $resMsg['list'] = $info;
-//        $this->sendJson($client_id, $resMsg);
-//    }
+
     /**
      * 获取在线列表
      */
@@ -137,14 +123,10 @@ HTML;
             'cmd' => 'getOnline',
         );
         $users = $this->storage->getOnlineUsers();
-        $info = $this->storage->getUsers($users,$msg);
+        $info = $this->storage->getUsers(array_slice($users, 0, 100));
         $resMsg['users'] = $users;
         $resMsg['list'] = $info;
         $this->sendJson($client_id, $resMsg);
-    }
-
-    function cmd_updateMessage($client_id, $msg){
-        $this->storage->updateMessage($client_id,$msg);
     }
 
     /**
@@ -155,7 +137,6 @@ HTML;
         $task['fd'] = $client_id;
         $task['cmd'] = 'getHistory';
         $task['offset'] = '0,100';
-        $task['userid']=$msg['userid'];
         //在task worker中会直接发送给客户端
         $this->getSwooleServer()->task(serialize($task), self::WORKER_HISTORY_ID);
     }
@@ -167,35 +148,22 @@ HTML;
      */
     function cmd_login($client_id, $msg)
     {
-       // var_dump($msg);
         $info['name'] = Filter::escape(strip_tags($msg['name']));
         $info['avatar'] = Filter::escape($msg['avatar']);
-        $info['parent']=$msg['parent'];
-        $info['childrens']=Filter::escape($msg['childrens']);
-        $info['userid']=Filter::escape($msg['userid']);
-        //var_dump($info);
+        $info['userid']=$msg['userid'];
         //回复给登录用户
         $resMsg = array(
             'cmd' => 'login',
             'fd' => $client_id,
             'name' => $info['name'],
             'avatar' => $info['avatar'],
-            'userid'=>$info['userid'],
-        );
-        $resRedis=array(
-            'cmd' => 'login',
-            'fd' => $client_id,
-            'name' => $info['name'],
-            'userid'=>$info['userid'],
-            'avatar' => $info['avatar'],
-            'parent_id' => $info['parent']['userid']?$info['parent']['userid']:0,
-            'parent_name' => $info['parent']['username']?$info['parent']['username']:'',
+            'userid'=>$info['userid']
         );
 
         //把会话存起来
         $this->users[$client_id] = $resMsg;
 
-        $this->storage->login($client_id, $resRedis);
+        $this->storage->login($client_id, $resMsg);
         $this->sendJson($client_id, $resMsg);
 
         //广播给其它在线用户
@@ -211,7 +179,16 @@ HTML;
         );
         $this->broadcastJson($client_id, $loginMsg);
     }
+    function cmd_updateMessage($client_id, $msg){
+        $this->storage->updateMessage($client_id,$msg);
+    }
 
+    function updateMessage($client_id, $msg){
+        $data['not_read_number']=0;
+        $where['from_userid']=$msg['to_userid'];
+        $where['userid']=$msg['from_userid'];
+        table(self::PREFIX.'_message_status')->sets($data,$where);
+    }
     /**
      * 发送信息请求
      */
@@ -260,25 +237,25 @@ HTML;
 
 
         }
-     /*   //表示群发
-        if ($msg['channal'] == 0)
-        {
-            $this->broadcastJson($client_id, $resMsg);
-            $this->getSwooleServer()->task(serialize(array(
-                'cmd' => 'addHistory',
-                'msg' => $msg,
-                'fd'  => $client_id,
-            )), self::WORKER_HISTORY_ID);
-        }
-        //表示私聊
-        elseif ($msg['channal'] == 1)
-        {
+        /*   //表示群发
+           if ($msg['channal'] == 0)
+           {
+               $this->broadcastJson($client_id, $resMsg);
+               $this->getSwooleServer()->task(serialize(array(
+                   'cmd' => 'addHistory',
+                   'msg' => $msg,
+                   'fd'  => $client_id,
+               )), self::WORKER_HISTORY_ID);
+           }
+           //表示私聊
+           elseif ($msg['channal'] == 1)
+           {
 
-                    $this->sendJson($msg['to'], $resMsg);
+                       $this->sendJson($msg['to'], $resMsg);
 
 
-            $this->storage->addHistory($client_id, $msg);
-        }*/
+               $this->storage->addHistory($client_id, $msg);
+           }*/
     }
 
     /**
