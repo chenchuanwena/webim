@@ -91,7 +91,9 @@ class FileLog extends \Swoole\Log implements \Swoole\IFace\Log
             return false;
         }
         $level_str = self::$level_str[$level];
-        $now = new \DateTime('now');
+        $nowObj = date('m-d-Y H:i:s');
+
+        $now = \DateTime::createFromFormat('m-d-Y H:i:s', $nowObj);
         $date = $now->format('Ymd');
         $log = $now->format(self::$date_format)."\t{$level_str}\t{$msg}";
         if ($this->verbose)
