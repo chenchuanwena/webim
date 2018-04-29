@@ -91,6 +91,7 @@ class FileLog extends \Swoole\Log implements \Swoole\IFace\Log
             return false;
         }
         $level_str = self::$level_str[$level];
+        ini_set('date.timezone','Asia/Shanghai');
         $nowObj = date('m-d-Y H:i:s');
 
         $now = \DateTime::createFromFormat('m-d-Y H:i:s', $nowObj);

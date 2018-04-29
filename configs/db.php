@@ -1,12 +1,12 @@
 <?php
 $db['master'] = array(
     'type'       => Swoole\Database::TYPE_MYSQLi,
-    'host'       => "10.63.34.29",
+    'host'       => "192.168.80.18",
     'port'       => 3306,
     'dbms'       => 'mysql',
     'engine'     => 'MyISAM',
     'user'       => "root",
-    'passwd'     => "*()_+890-=iop[]",
+    'passwd'     => "123456",
     'name'       => "webim",
     'charset'    => "utf8",
     'setname'    => true,

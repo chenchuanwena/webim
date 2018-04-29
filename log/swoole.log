@@ -11346,3 +11346,11 @@ Stack trace:
 [2018-02-08 18:12:00 *31507.0]	ERROR	swFactoryProcess_finish (ERROR 1004): send 34 byte failed, because session#14 is closed.
 [2018-02-08 18:12:56 *31507.0]	ERROR	swFactoryProcess_finish (ERROR 1004): send 34 byte failed, because session#15 is closed.
 [2018-02-08 18:16:16 *31507.0]	ERROR	swFactoryProcess_finish (ERROR 1004): send 34 byte failed, because session#16 is closed.
+[2018-04-28 21:07:00 $20404.0]	WARNING	swSignal_callback: signal[1] callback is null.
+[2018-04-28 21:07:00 #20403.0]	WARNING	swSignalfd_onSignal: signal[1] callback is null.
+[2018-04-28 21:07:00 *20407.0]	WARNING	swSignalfd_onSignal: signal[1] callback is null.
+[2018-04-28 21:27:01 #20403.0]	NOTICE	Server is shutdown now.
+[2018-04-28 21:33:59 #20520.0]	NOTICE	Server is shutdown now.
+[2018-04-29 11:45:47 @23396.0]	WARNING	swPort_listen: listen(0.0.0.0:9503, 128) failed. Error: Address already in use[98]
+[2018-04-29 12:01:22 $23491.0]	WARNING	swManager_check_exit_status: worker#0 abnormal exit, status=255, signal=0
+[2018-04-29 12:38:28 $23577.0]	WARNING	swManager_check_exit_status: worker#0 abnormal exit, status=255, signal=0
