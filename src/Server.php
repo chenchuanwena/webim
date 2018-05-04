@@ -48,8 +48,7 @@ HTML;
         /**
          * 使用文件或redis存储聊天信息
          */
-
-        $this->storage = new Storage($config['storage']);
+        $this->storage = new Storage($config['webim']['storage']);
         $this->origin = $config['server']['origin'];
         parent::__construct($config);
     }
@@ -148,16 +147,16 @@ HTML;
      */
     function cmd_login($client_id, $msg)
     {
+        echo 23;
         $info['name'] = Filter::escape(strip_tags($msg['name']));
         $info['avatar'] = Filter::escape($msg['avatar']);
-        $info['userid']=$msg['userid'];
+
         //回复给登录用户
         $resMsg = array(
             'cmd' => 'login',
             'fd' => $client_id,
             'name' => $info['name'],
             'avatar' => $info['avatar'],
-            'userid'=>$info['userid']
         );
 
         //把会话存起来
@@ -179,16 +178,7 @@ HTML;
         );
         $this->broadcastJson($client_id, $loginMsg);
     }
-    function cmd_updateMessage($client_id, $msg){
-        $this->storage->updateMessage($client_id,$msg);
-    }
 
-    function updateMessage($client_id, $msg){
-        $data['not_read_number']=0;
-        $where['from_userid']=$msg['to_userid'];
-        $where['userid']=$msg['from_userid'];
-        table(self::PREFIX.'_message_status')->sets($data,$where);
-    }
     /**
      * 发送信息请求
      */
@@ -207,11 +197,12 @@ HTML;
         //上一次发送的时间超过了允许的值，每N秒可以发送一次
         if ($this->lastSentTime[$client_id] > $now - $this->config['webim']['send_interval_limit'])
         {
-            $this->sendErrorMessage($client_id, 104, $msg['data'].'这个消息发送不成功！每秒限发一条信息');
+            $this->sendErrorMessage($client_id, 104, 'over frequency limit');
             return;
         }
         //记录本次消息发送的时间
         $this->lastSentTime[$client_id] = $now;
+
         //表示群发
         if ($msg['channal'] == 0)
         {
@@ -225,37 +216,9 @@ HTML;
         //表示私聊
         elseif ($msg['channal'] == 1)
         {
-            foreach($resMsg['users'] as $user){
-                if($user['fd']>-1){
-                    $resMsg['from']=$resMsg['userid'];
-                    $this->sendJson($user['fd'], $resMsg);
-                }
-                $msg['to_userid']=$user['userid'];
-                $msg['to_username']=$user['username'];
-                $this->storage->addHistory($client_id, $msg);
-            }
-
-
+            $this->sendJson($msg['to'], $resMsg);
+            //$this->store->addHistory($client_id, $msg['data']);
         }
-        /*   //表示群发
-           if ($msg['channal'] == 0)
-           {
-               $this->broadcastJson($client_id, $resMsg);
-               $this->getSwooleServer()->task(serialize(array(
-                   'cmd' => 'addHistory',
-                   'msg' => $msg,
-                   'fd'  => $client_id,
-               )), self::WORKER_HISTORY_ID);
-           }
-           //表示私聊
-           elseif ($msg['channal'] == 1)
-           {
-
-                       $this->sendJson($msg['to'], $resMsg);
-
-
-               $this->storage->addHistory($client_id, $msg);
-           }*/
     }
 
     /**

@@ -11354,3 +11354,15 @@ Stack trace:
 [2018-04-29 11:45:47 @23396.0]	WARNING	swPort_listen: listen(0.0.0.0:9503, 128) failed. Error: Address already in use[98]
 [2018-04-29 12:01:22 $23491.0]	WARNING	swManager_check_exit_status: worker#0 abnormal exit, status=255, signal=0
 [2018-04-29 12:38:28 $23577.0]	WARNING	swManager_check_exit_status: worker#0 abnormal exit, status=255, signal=0
+[2018-05-05 00:04:38 *15422.0]	ERROR	swFactoryProcess_finish (ERROR 1004): send 34 byte failed, because connection[fd=2] is closed.
+[2018-05-05 00:05:17 *15422.0]	ERROR	swFactoryProcess_finish (ERROR 1004): send 34 byte failed, because connection[fd=3] is closed.
+[2018-05-05 00:17:09 *15444.0]	ERROR	swFactoryProcess_finish (ERROR 1004): send 34 byte failed, because connection[fd=1] is closed.
+[2018-05-05 00:47:43 *15452.0]	ERROR	swFactoryProcess_finish (ERROR 1004): send 34 byte failed, because connection[fd=2] is closed.
+[2018-05-05 01:23:00 *15484.0]	ERROR	zm_deactivate_swoole (ERROR 503): Fatal error: Call to undefined method swoole_server::push() in /www/web/webim/vendor/matyhtf/swoole_framework/libs/Swoole/Network/Server.php on line 263.
+[2018-05-05 01:23:00 $15481.0]	WARNING	swManager_check_exit_status: worker#0 abnormal exit, status=255, signal=0
+[2018-05-05 01:25:25 *15491.0]	ERROR	swFactoryProcess_finish (ERROR 1004): send 34 byte failed, because connection[fd=1] is closed.
+[2018-05-05 01:29:59 *15498.0]	ERROR	swFactoryProcess_finish (ERROR 1004): send 34 byte failed, because connection[fd=1] is closed.
+[2018-05-05 02:46:33 *15607.0]	ERROR	swFactoryProcess_finish (ERROR 1005): connection[fd=2] does not exists.
+[2018-05-05 02:53:21 $15631.0]	WARNING	swManager_check_exit_status: worker#0 abnormal exit, status=255, signal=0
+[2018-05-05 02:53:49 $15638.0]	WARNING	swManager_check_exit_status: worker#0 abnormal exit, status=255, signal=0
+[2018-05-05 03:14:57 $15699.0]	WARNING	swManager_check_exit_status: worker#0 abnormal exit, status=255, signal=0

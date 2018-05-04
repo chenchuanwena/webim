@@ -17,9 +17,31 @@ class Page extends \Swoole\Controller
             }
         }
     }
+    function SendDataByCurl($url,$data=array()){
+        //对空格进行转义
+        $url = str_replace(' ','+',$url);
 
+        $ch = curl_init();
+        //设置选项，包括URL
+        curl_setopt($ch, CURLOPT_URL, "$url");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch,CURLOPT_TIMEOUT,3);  //定义超时3秒钟
+        // POST数据
+        curl_setopt($ch, CURLOPT_POST, 1);
+        // 把post的变量加上
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+
+        //执行并获取url地址的内容
+        $output = curl_exec($ch);
+        //释放curl句柄
+        curl_close($ch);
+        return $output;
+
+    }
     function index()
     {
+
         $this->session->start();
 //        if (!empty($_SESSION['isLogin']))
 //        {
@@ -27,10 +49,15 @@ class Page extends \Swoole\Controller
 //            $this->http->redirect('/page/chatroom/');
 //            return;
 //        }
-        if (!empty($_GET['sess']))
+        if (!empty($_GET['key']))
         {
-            $curl = new CURL();
-            $user = $curl->get($this->config['login']['get_user_info'] . '&sess=' . $_GET['sess']);
+            $user = array(
+                "status"=>200,
+                "userid"=>$_GET['key'],
+                "name"=>"han".$_GET['key'],
+                "nickname"=>"han".$_GET['key']
+            );
+
             if (empty($user))
             {
                 login:
@@ -40,12 +67,12 @@ class Page extends \Swoole\Controller
             }
             else
             {
-                $user=json_decode($user, true);
-                $responseContent=$user['repsoneContent'];
+
+                $responseContent=$user;
                 if($user['status']==200){
                     $_SESSION['isLogin'] = 1;
                     $_SESSION['user'] = $responseContent;
-                    $_SESSION['sess']=$_GET['sess'];
+                    $_SESSION['key']=$_GET['key'];
                     if(isset($_GET['tag'])&&$_GET['tag']=='ajax'){
                         // header("Content-type: application/json");
                         // 指定允许其他域名访问
@@ -77,7 +104,7 @@ class Page extends \Swoole\Controller
         }
     }
 
-    function chatroom()
+    public function chatroom()
     {
 
 

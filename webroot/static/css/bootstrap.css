@@ -3017,11 +3017,6 @@ input[type="submit"].btn.btn-mini {
   text-decoration: none;
   background-color: #222222;
 }
-#left-userlist .active{
-  color: #ffffff;
-  text-decoration: none;
-  background-color: pink;
-}
 .navbar .divider-vertical {
   height: 40px;
   width: 1px;

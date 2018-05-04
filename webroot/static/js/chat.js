@@ -3,36 +3,8 @@ var client_id = 0;
 var userlist = {};
 var GET = getRequest();
 var face_count = 19;
-var send_user_list=Array();
-var allHistoryList=Array();
-var HistoryList=Array();
-
 
 $(document).ready(function () {
-    if(user.parent.nickname==null){
-        $('.nav-header').html('我是总代');
-
-    }else{
-        $('.nav-header').html("<a style='display:block;height:30px;width:200px;position: relative; ' href=\"javascript:selectUser('"
-            + user.parent.userid + "')\">"+"<img src='" + avataroffline+"' width='30' height='30'/>我的上级</a>");
-        $('.nav-header').attr('id','inroom_'+user.parent.userid);
-        $('.nav-header').attr('fd',-1);
-        $('.nav-header').attr('username',user.parent.username);
-        userlist[user.parent.userid]=user.parent.username;
-        var divItem='<div class="divItem"> <input class="classCheckbox" name="itemChecks" type="checkbox" value="'+user.parent.userid+'" >我的上级 </div>';
-        $('#divContent').append(divItem);
-    }
-    var li='';
-    for (var i = 0; i < user.childrens.results.length; i++) {
-        li = li + "<li id='inroom_" + user.childrens.results[i].userid + "' fd='-1' username='"+user.childrens.results[i].username+"'>" +
-            "<a style='display:block;height:30px;width:200px; position: relative;' href=\"javascript:selectUser('"
-            + user.childrens.results[i].userid + "')\"><img src='" + avataroffline
-            + "' title='" + user.childrens.results[i].username + "' width='30' height='30'>" + user.childrens.results[i].username+"</a></li>";
-           userlist[user.childrens.results[i].userid]=user.childrens.results[i].username;
-        var divItem='<div class="divItem"> <input class="classCheckbox"  name="itemChecks" type="checkbox" value="'+user.childrens.results[i].userid+'" >'+user.childrens.results[i].username+' </div>';
-        $('#divContent').append(divItem);
-    }
-    $('#left-userlist').html(li);
     //使用原生WebSocket
     if (window.WebSocket || window.MozWebSocket)
     {
@@ -67,10 +39,7 @@ function listenEvent() {
         msg = new Object();
         msg.cmd = 'login';
         msg.name = user.nickname;
-        msg.userid=user.userid;
         msg.avatar = user.avatar;
-        msg.parent=user.parent;
-        msg.childrens=user.childrens;
         ws.send($.toJSON(msg));
     };
 
@@ -81,11 +50,10 @@ function listenEvent() {
         if (cmd == 'login')
         {
             client_id = $.evalJSON(e.data).fd;
-           // ws.send($.toJSON({cmd : 'getUnreadUser',userid:user.userid,parentid:msg.parent.userid}));
             //获取在线列表
-            ws.send($.toJSON({cmd : 'getOnline',userid:user.userid,parentid:msg.parent.userid}));
+            ws.send($.toJSON({cmd : 'getOnline'}));
             //获取历史记录
-            ws.send($.toJSON({cmd : 'getHistory',userid:user.userid}));
+            ws.send($.toJSON({cmd : 'getHistory'}));
             //alert( "收到消息了:"+e.data );
         }
         else if (cmd == 'getOnline')
@@ -94,60 +62,21 @@ function listenEvent() {
         }
         else if (cmd == 'getHistory')
         {
-            //showHistory(message);
-            allHistoryList=message;
-            initUsersHistory(message);
-
-            if(user.parent.nickname==null){
-                HistoryList[0]=new Object();
-                HistoryList[0]['history']=new Array();
-                var userid=$('#left-userlist li:eq(0)').attr('userid');
-                selectUser(userid);
-
-            }else{
-                if(HistoryList[user.parent.userid]==undefined){
-                    HistoryList[0]=new Object();
-                    HistoryList[0]['history']=new Array();
-
-                }else{
-                    showHistory(HistoryList[user.parent.userid]);
-                    selectUser(user.parent.userid);
-                }
-            }
-
+            showHistory(message);
         }
         else if (cmd == 'newUser')
         {
             showNewUser(message);
-           // showNewMsg(message);
         }
         else if (cmd == 'fromMsg')
         {
-            $active_id=getActiveId();
-            if($active_id==("inroom_"+message.from)){
-                showNewMsg(message);
-            }else{
-                var oneHistory=new Object();
-                oneHistory['from_userid']=message['from'];
-                message['channal']= 10+message['channal'];
-                oneHistory['msg']=message;
-                oneHistory['to_userid']=user.userid;
-                oneHistory['to_username']=user.username;
-                oneHistory['type']=message['type'];
-                oneHistory['user']=user;
-                oneHistory['username']=message['username'];
-                seeMessage(message['from']);
-
-                addHistoryList(oneHistory,'from_userid');
-            }
-
+            showNewMsg(message);
         }
         else if (cmd == 'offline')
         {
             var cid = message.fd;
-            var userid=message.userid;
-            delUser(cid,userid);
-            //showNewMsg(message);
+            delUser(cid);
+            showNewMsg(message);
         }
     };
 
@@ -177,74 +106,9 @@ document.onkeydown = function (e) {
         return true;
     }
 };
-function getActiveId(){
-    var active_id= $('.active:eq(0)').attr('id');
-    return active_id;
-}
-function addHistoryList(meg,useridType){
-    var userid=meg[useridType];
-    if(HistoryList[userid]==undefined){
-        HistoryList[userid]=new Object();
-        HistoryList[userid]['history']=new Array();
-        // HistoryList[dataObj.history[i]['to_userid']]=new Object();
-    }
-    HistoryList[userid]['history'].push(meg);
-}
-var activeMessageUsers=Array();
-function addSend_user_list(userid){
-    var user=new Object();
-    user['userid']=userid;
-    user['fd']=$('#inroom_'+userid).attr('fd');
-    user['username']=$('#inroom_'+userid).attr('username');
-    send_user_list.push(user);
-}
-function seeMessage(userid){
-    if(user.parent.userid==userid){
-        $("#inroom_"+userid+" a img").attr('src',avatarleadermessage);
-    }else{
-        $("#inroom_"+userid+" a img").attr('src',avatarworkermessage);
-    }
-}
-function removeMessage(userid){
-    $useridSrc=$("#inroom_"+userid+" a img").attr('src');;
-    if($useridSrc==avatarleadermessage){
-        $("#inroom_"+userid+" a img").attr('src',avatarleaderonline);
-    }
-    if($useridSrc==avatarworkermessage){
-        $("#inroom_"+userid+" a img").attr('src',avatarworkeronline);
-    }
-}
+
 function selectUser(userid) {
-    send_user_list.splice(0,send_user_list.length);
-    addSend_user_list(userid);
-    var active_id= $('.active:eq(0)').attr('id');
-    $('.active').removeClass('active');
-    $('#inroom_'+userid).addClass('active');
-    removeMessage(userid);
-    activeMessageUsers[active_id]= $('#chat-messages').html();
-    $('#chat-messages').html('');
-    if(HistoryList[userid]==undefined){
-        HistoryList[userid]=new Object();
-        HistoryList[userid]['history']=new Array();
-        // HistoryList[dataObj.history[i]['to_userid']]=new Object();
-    }else{
-        if(activeMessageUsers['inroom_'+userid]==undefined){
-
-        }else{
-            $('#chat-messages').html(activeMessageUsers['inroom_'+userid]);
-        }
-        if(HistoryList[userid].hasOwnProperty('history')){
-            showHistory(HistoryList[userid]);
-            HistoryList[userid]['history']=new Array();
-        }else{
-            console.log('234');
-        }
-
-    }
-    $('#chat-messages')[0].scrollTop = 1000000;
-
-
-
+    $('#userlist').val(userid);
 }
 
 /**
@@ -253,85 +117,25 @@ function selectUser(userid) {
  */
 function showOnlineList(dataObj) {
     var li = '';
-    //var option = "<option value='0' id='user_all' >所有人</option>";
+    var option = "<option value='0' id='user_all' >所有人</option>";
+
     for (var i = 0; i < dataObj.list.length; i++) {
-        if(dataObj.list[i].is_child==1){
-            $('#inroom_'+dataObj.list[i].userid+" a").css('color','yellowGreen');
-            $('#inroom_'+dataObj.list[i].userid).attr('fd',dataObj.list[i].fd);
-            $('#inroom_'+dataObj.list[i].userid).attr('userid',dataObj.list[i].userid);
-            $('#inroom_'+dataObj.list[i].userid+' img').attr('src',avatarworkeronline);
-            $('#left-userlist').prepend($('#inroom_'+dataObj.list[i].userid));
-            userlist[dataObj.list[i].userid] = dataObj.list[i].name;
-            //li = li + "<li id='inroom_" + dataObj.list[i].fd + "'>" +
-            //    "<a style='color:yellowGreen;' href=\"javascript:selectUser('"
-            //    + dataObj.list[i].fd + "')\">" +  dataObj.list[i].name + "</a></li>";
-            //userlist[dataObj.list[i].fd] = dataObj.list[i].name;
+        li = li + "<li id='inroom_" + dataObj.list[i].fd + "'>" +
+        "<a href=\"javascript:selectUser('"
+        + dataObj.list[i].fd + "')\">" + "<img src='" + dataObj.list[i].avatar
+        + "' title='" + dataObj.list[i].name + "' width='50' height='50'></a></li>";
 
-            //if (dataObj.list[i].fd != client_id) {
-            //    option = option + "<option value='" + dataObj.list[i].fd + "' id='user_" + dataObj.list[i].fd + "'>"
-            //        + dataObj.list[i].name + "</option>"
-            //}
+        userlist[dataObj.list[i].fd] = dataObj.list[i].name;
 
-
-        }else{
-            $('#inroom_'+dataObj.list[i].userid+" a").css('color','yellowGreen');
-            $('#inroom_'+dataObj.list[i].userid).attr('fd',dataObj.list[i].fd);
-            $('#inroom_'+dataObj.list[i].userid+' img').attr('src',avatarleaderonline);
-            userlist[dataObj.list[i].userid] = dataObj.list[i].name;
+        if (dataObj.list[i].fd != client_id) {
+            option = option + "<option value='" + dataObj.list[i].fd + "' id='user_" + dataObj.list[i].fd + "'>"
+                + dataObj.list[i].name + "</option>"
         }
-
-
     }
-   // $('#left-userlist').prepend(li);
-   // $('#userlist').html(option);
-    //for (var i = 0; i < dataObj.list.length; i++) {
-    //    li = li + "<li id='inroom_" + dataObj.list[i].fd + "'>" +
-    //    "<a href=\"javascript:selectUser('"
-    //    + dataObj.list[i].fd + "')\">" + "<img src='" + dataObj.list[i].avatar
-    //    + "' title='" + dataObj.list[i].name + "' width='50' height='50'></a></li>";
-    //
-    //    userlist[dataObj.list[i].fd] = dataObj.list[i].name;
-    //
-    //    if (dataObj.list[i].fd != client_id) {
-    //        option = option + "<option value='" + dataObj.list[i].fd + "' id='user_" + dataObj.list[i].fd + "'>"
-    //            + dataObj.list[i].name + "</option>"
-    //    }
-    //}
-    //$('#left-userlist').html(li);
-    //$('#userlist').html(option);
+    $('#left-userlist').html(li);
+    $('#userlist').html(option);
 }
-function initUsersHistory(dataObj){
-    var msg;
-    if (debug) {
-        console.dir(dataObj);
-    }
-    for (var i = 0; i < dataObj.history.length; i++) {
-        if(HistoryList[dataObj.history[i]['to_userid']]==undefined){
-            HistoryList[dataObj.history[i]['to_userid']]=new Object();
-        }
-        if(HistoryList[dataObj.history[i]['from_userid']]==undefined){
-            HistoryList[dataObj.history[i]['from_userid']]=new Object();
-        }
-        if(dataObj.history[i]['to_userid']!=user.userid){
-            if( HistoryList[dataObj.history[i]['to_userid']].hasOwnProperty('history')){
-                HistoryList[dataObj.history[i]['to_userid']]['history'].push(dataObj.history[i]);
-            }else{
-                HistoryList[dataObj.history[i]['to_userid']]['history']=Array();
-                HistoryList[dataObj.history[i]['to_userid']]['history'].push(dataObj.history[i]);
-            }
 
-        }
-        if(dataObj.history[i]['from_userid']!=user.userid){
-
-            if( HistoryList[dataObj.history[i]['from_userid']].hasOwnProperty('history')){
-                HistoryList[dataObj.history[i]['from_userid']]['history'].push(dataObj.history[i]);
-            }else{
-                HistoryList[dataObj.history[i]['from_userid']]['history']=Array();
-                HistoryList[dataObj.history[i]['from_userid']]['history'].push(dataObj.history[i]);
-            }
-        }
-    }
-}
 /**
  * 显示所有在线列表
  * @param dataObj
@@ -344,16 +148,13 @@ function showHistory(dataObj) {
     for (var i = 0; i < dataObj.history.length; i++) {
         msg = dataObj.history[i]['msg'];
         if (!msg) continue;
-       // msg['time'] = dataObj.history[i]['time'];
+        msg['time'] = dataObj.history[i]['time'];
         msg['user'] = dataObj.history[i]['user'];
         if (dataObj.history[i]['type'])
         {
             msg['type'] = dataObj.history[i]['type'];
         }
-        if(msg['channal']<10){
-            msg['channal'] = 3;
-        }
-        msg['to_username']=dataObj.history[i]['to_username'];
+        msg['channal'] = 3;
         showNewMsg(msg);
     }
 }
@@ -363,29 +164,17 @@ function showHistory(dataObj) {
  * @param dataObj
  */
 function showNewUser(dataObj) {
-        userlist[dataObj.userid] = dataObj.name;
+    if (!userlist[dataObj.fd]) {
+        userlist[dataObj.fd] = dataObj.name;
         if (dataObj.fd != client_id) {
-            if(user.parent.userid==dataObj.userid){
-                $('#inroom_'+dataObj.userid+" a").css('color','yellowgreen');
-                $('#inroom_'+dataObj.userid).attr('fd',dataObj.fd);
-                $('#inroom_'+dataObj.userid+" a img").attr('src',avatarleaderonline);
-            }else{
-                $('#inroom_'+dataObj.userid+" a").css('color','yellowgreen');
-                $('#inroom_'+dataObj.userid).attr('fd',dataObj.fd);
-                $('#left-userlist').prepend($('#inroom_'+dataObj.userid));
-                $('#inroom_'+dataObj.userid+" img").attr('src',avatarworkeronline);
-            }
-            for(useri in send_user_list ){
-                if(dataObj.userid==send_user_list[useri]['userid']){
-                    send_user_list[useri]['fd']=dataObj.fd;
-                }
-            }
+            $('#userlist').append("<option value='" + dataObj.fd + "' id='user_" + dataObj.fd + "'>" + dataObj.name + "</option>");
+
         }
-
-        //$('#left-userlist').prepend(
-        //    "<li id='inroom_" + dataObj.fd + "'>" +
-        //        '<a style="color:yellowgreen;" href="javascript: selectUser(\'' + dataObj.fd + '\')">' + dataObj.name+"</a></li>");
-
+        $('#left-userlist').append(
+            "<li id='inroom_" + dataObj.fd + "'>" +
+                '<a href="javascript: selectUser(\'' + dataObj.fd + '\')">' + "<img src='" + dataObj.avatar
+                + "' width='50' height='50'></a></li>");
+    }
 }
 
 /**
@@ -428,27 +217,27 @@ function showNewMsg(dataObj) {
         //历史记录
         if (channal == 3)
         {
-            said = '对'+dataObj.to_username+'说: ';
+            said = '对大家说: ';
             html += '<span style="color: green">【历史记录】</span><span style="color: orange">' + dataObj.user.name + said;
             html += '</span>';
         }
         //如果说话的是我自己
         else {
             if (client_id == fromId) {
-                if (channal == 0 ||channal==10) {
+                if (channal == 0) {
                     said = '我对大家说:';
                 }
-                else if (channal == 1 || channal==11) {
-                    said = "我对" + userlist[to] + "说:";
+                else if (channal == 1) {
+                    said = "我悄悄的对" + userlist[to] + "说:";
                 }
                 html += '<span style="color: orange">' + said + ' </span> ';
             }
             else {
-                if (channal == 0 ||channal==10) {
+                if (channal == 0) {
                     said = '对大家说:';
                 }
-                else if (channal == 1 || channal==11) {
-                    said = "对我说:";
+                else if (channal == 1) {
+                    said = "悄悄的对我说:";
                 }
 
                 html += '<span style="color: orange"><a href="javascript:selectUser('
@@ -511,37 +300,16 @@ function getRequest() {
     return theRequest;
 }
 
-//function selectUser(userid) {
-//    $('#userlist').val(userid);
-//}
+function selectUser(userid) {
+    $('#userlist').val(userid);
+}
 
-function delUser(fd,userid) {
-    //$('#user_' + fd).remove();
-    $('#inroom_' + userid).attr('fd',-1);
-    $('#inroom_' + userid+" a").removeAttr('style');
-    $("#inroom_"+userid+" a img").attr('src',avataroffline);
-    delete (userlist[fd]);
+function delUser(userid) {
+    $('#user_' + userid).remove();
+    $('#inroom_' + userid).remove();
+    delete (userlist[userid]);
 }
-//群发信息
-function addMessage(msg){
-    msg.channal=11;
-    var curentMessage=JSON.parse(JSON.stringify(msg));
-    var active_id=getActiveId();
-    if(active_id==("inroom_"+ msg.to)){
-        showNewMsg(msg);
-    }else{
-        var oneHistory=new Object();
-        oneHistory['from_userid']=user.userid;
-        oneHistory['msg']=curentMessage;
-        oneHistory['time']=Date.parse( new Date());;
-        oneHistory['to_userid']=msg.to;
-        oneHistory['to_username']=msg.to_username;
-        oneHistory['type']=msg.type;
-        oneHistory['user']=user;
-        oneHistory['username']=user.username;
-        addHistoryList(oneHistory,'to_userid');
-    }
-}
+
 function sendMsg(content, type) {
     var msg = {};
 
@@ -552,46 +320,25 @@ function sendMsg(content, type) {
     if (!content) {
         return false;
     }
-    msg.cmd = 'message';
-    msg.from = client_id;
-   // msg.to = $('#userlist').val();
-    msg.channal = 1;
-    msg.data = content;
-    msg.users=send_user_list;
-    msg.type = type;
-    msg.userid=user.userid;
-    msg.username=user.username;
-    msg.avatar=user.avatar;
-    ws.send($.toJSON(msg));
-    for(useri in send_user_list ){
-        msg.to=send_user_list[useri]['userid'];
-        msg.to_username=send_user_list[useri]['username'];
-        addMessage(msg);
-        //showNewMsg(msg);
 
-
+    if ($('#userlist').val() == 0) {
+        msg.cmd = 'message';
+        msg.from = client_id;
+        msg.channal = 0;
+        msg.data = content;
+        msg.type = type;
+        ws.send($.toJSON(msg));
     }
-
-    //if ($('#userlist').val() == 0) {
-    //    msg.cmd = 'message';
-    //    msg.from = client_id;
-    //    msg.channal = 0;
-    //    msg.data = content;
-    //    msg.users=send_user_list;
-    //    msg.type = type;
-    //    ws.send($.toJSON(msg));
-    //}
-    //else {
-    //    msg.cmd = 'message';
-    //    msg.from = client_id;
-    //    msg.to = $('#userlist').val();
-    //    msg.channal = 1;
-    //    msg.data = content;
-    //    msg.users=send_user_list;
-    //    msg.type = type;
-    //    ws.send($.toJSON(msg));
-    //}
-
+    else {
+        msg.cmd = 'message';
+        msg.from = client_id;
+        msg.to = $('#userlist').val();
+        msg.channal = 1;
+        msg.data = content;
+        msg.type = type;
+        ws.send($.toJSON(msg));
+    }
+    showNewMsg(msg);
     $('#msg_content').val('')
 }
 

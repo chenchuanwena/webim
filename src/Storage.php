@@ -79,31 +79,22 @@ class Storage
     {
         return $this->redis->exists(self::PREFIX . ':client:' . $userid);
     }
-    function updateMessage($client_id, $msg){
-        $data['not_read_number']=0;
-        $where['from_userid']=$msg['to_userid'];
-        $where['userid']=$msg['from_userid'];
-        table(self::PREFIX.'_message_status')->sets($data,$where);
-    }
+
     function addHistory($userid, $msg)
     {
+        $info = $this->getUser($userid);
+
+        $log['user'] = $info;
         $log['msg'] = $msg;
         $log['time'] = time();
         $log['type'] = empty($msg['type']) ? '' : $msg['type'];
-        $log['to_userid']=$msg['to_userid'];
-        $log['from_userid']=$msg['userid'];
+
         table(self::PREFIX.'_history')->put(array(
-            'name' => $msg['username'],
-            'avatar' => $msg['avatar'],
+            'name' => $info['name'],
+            'avatar' => $info['avatar'],
             'msg' => json_encode($msg),
             'type' => empty($msg['type']) ? '' : $msg['type'],
-            'from_userid'=>$log['from_userid'],
-            'to_userid'=>$log['to_userid'],
-            'to_username'=>$msg['to_username'],
         ));
-        if($log['to_userid']!=0){
-            table(self::PREFIX.'_message_status')->insertOrReplace($log);
-        }
     }
 
     function getHistory($offset = 0, $num = 100)

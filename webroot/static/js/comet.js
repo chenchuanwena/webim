@@ -48,7 +48,6 @@ function Comet(url) {
 
     //连接到服务器
     this.connect = function () {
-        console.log(this.url + '/connect');
         var websocket = this;
         $.ajax({
             type: "POST",

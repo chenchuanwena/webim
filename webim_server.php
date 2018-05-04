@@ -28,6 +28,7 @@ Swoole\Network\Server::setPidFile(__DIR__ . '/log/webim_server.pid');
  */
 Swoole\Network\Server::start(function ()
 {
+
     $config = Swoole::getInstance()->config['webim'];
     $webim = new WebIM\Server($config);
     $webim->loadSetting(__DIR__ . "/swoole.ini"); //加载配置文件

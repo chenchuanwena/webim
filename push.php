@@ -2,7 +2,7 @@
 header("Content-type: text/html; charset=utf-8");
 $push_client_id = time();
 $push_data = [
-    'method' => 'push',
+    'method' => 'server_push',
     'data' => [
         'push_client_id' => $push_client_id,
         'message' => '推送服务端ID'.$push_client_id.'随机一条信息',
@@ -10,7 +10,7 @@ $push_data = [
     ]
 ];
 $message = json_encode($push_data);
-$host = '192.168.80.18';
+$host = '192.168.1.201';
 $port = '9502';
 $data = send_tcp_message($host, $port, $message);
 $server_data = json_decode($data, true);

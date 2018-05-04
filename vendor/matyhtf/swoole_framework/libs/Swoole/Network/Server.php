@@ -239,27 +239,28 @@ class Server extends Base implements Driver
         {
             $this->sw = new \swoole_server($host, $port, self::$swooleMode, $flag);
         }
-        $tcp_server=  $this->sw->addlistener('0.0.0.0', 9502, SWOOLE_SOCK_TCP);
-        $tcp_server->set(array(
-            'open_length_check' => false,
-            'package_length_type' => 'N',
-            'package_length_offset' => 0,
-            'package_max_length' => 8192,
-            'open_eof_check'=> true,
-            'package_eof' => "\r\n"
-        ));
-
-        $tcp_server->on('connect', function() {
-            echo "Client:Connect\r\n";
-    });
-
-        $tcp_server->on('receive', function($serv, $fd, $from_id, $data)  {
-            $data = json_decode($data, true);
-            if(empty($data['method']) && !isset($data['method'])) return;
-            if(empty($data['data']) && !isset($data['data'])) return;
-            $s = json_encode($data['data']);
-            $this->sw->send($fd, json_encode(array("status"=>1,"message"=>"success", "data"=>['method' => 'receive', 'error_code' => 0, 'status' => 1])));
-            $this->sw->close($fd);
+//        $tcp_server=  $this->sw->addlistener('0.0.0.0', 9502, SWOOLE_SOCK_TCP);
+//        $tcp_server->set(array(
+//            'open_length_check' => false,
+//            'package_length_type' => 'N',
+//            'package_length_offset' => 0,
+//            'package_max_length' => 8192,
+//            'open_eof_check'=> true,
+//            'package_eof' => "\r\n"
+//        ));
+//
+//        $tcp_server->on('connect', function() {
+//            echo "Client:Connect\r\n";
+//    });
+//
+//        $tcp_server->on('receive', function($serv, $fd, $from_id, $data)  {
+//            $data = json_decode($data, true);
+//            if(empty($data['method']) && !isset($data['method'])) return;
+//            if(empty($data['data']) && !isset($data['data'])) return;
+//            $s = json_encode($data['data']);
+//            $this->sw->send($fd, json_encode(array("status"=>1,"message"=>"success", "data"=>['method' => 'receive', 'error_code' => 0, 'status' => 1])));
+//            $this->sw->close($fd);
+//            $this->sw->push(1, json_encode(array("cmd"=>"fromMsg","from"=>1,"channal"=>0,"data"=>"asdfasf","type"=>"text","to"=>1)));
             // 推送 存入redis、最后入库(MySQL)
 //            $async_data = $redis->rPush("message_center", $s);
 //            if($async_data) {
@@ -277,10 +278,10 @@ class Server extends Base implements Driver
 //                $serv->send($fd, responseJson(1,"fail", ['method' => 'receive', 'error_code' => 110,'status' => 0]));
 //            }
 
-        });
-        $tcp_server->on('close', function ($serv, $fd) {
-            echo "Client: Close.\n";
-        });
+//        });
+//        $tcp_server->on('close', function ($serv, $fd) {
+//            echo "Client: Close.\n";
+//        });
         $this->host = $host;
         $this->port = $port;
         Swoole\Error::$stop = false;

@@ -23,7 +23,6 @@ div.container {
 #left-column {
 	position:fixed;
 	left: -10px;
-	background-color: #FFFFFF;
 }
 
 #chat-column {
@@ -70,7 +69,6 @@ div.message-container{
 div#chat-messages {
 	overflow: auto;
 	height:450px;
-	background: #ffffff;
 }
 
 div.msg-time{
@@ -111,20 +109,12 @@ li.user-online img {
 }
 
 #left-userlist li {
+	float: left;
+    height: 60px;
     list-style: none outside none;
-	width: 193px;
-	height: 21px;
-	padding: 5px 0;
-
-}
-#left-userlist li a p,.nav-list li a p {
-	height: 6px;
-	width: 6px;
-	border-radius: 6px;
-	background: red;
-	position:  absolute;
-	top: 0;
-	left: 12px;
+    margin-top: 10px;
+    width: 60px;
+    margin-left: 0px;
 }
 #left-userlist li img{
    border-radius: 5px;
